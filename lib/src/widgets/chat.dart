@@ -103,6 +103,7 @@ class Chat extends StatefulWidget {
     this.slidableMessageBuilder,
     this.isLeftStatus = false,
     this.messageWidthRatio = 0.72,
+    this.customStructureBuilder,
   });
 
   /// See [Message.audioMessageBuilder].
@@ -336,6 +337,51 @@ class Chat extends StatefulWidget {
 
   /// Width ratio for message bubble.
   final double messageWidthRatio;
+
+  /// Defines a customizable structure builder for a chat list widget.
+  ///
+  /// This function type is used to create a custom structure for the chat list,
+  /// allowing for extensive customization of its appearance and behavior. It
+  /// takes several parameters that control various aspects of the chat list,
+  /// including scrolling behavior, typing indicators, and message display.
+  ///
+  /// Parameters:
+  /// - `scrollController`: Controls the scroll behavior of the chat list.
+  /// - `keyboardDismissBehavior`: Determines how the keyboard dismissal is handled.
+  /// - `scrollPhysics`: Defines the physics of the scrolling content.
+  /// - `reverse`: Whether the list should be displayed in reverse order.
+  /// - `bottomWidget`: A widget to display at the bottom of the list.
+  /// - `typingIndicatorOptions`: Configuration for the typing indicator.
+  /// - `bubbleRtlAlignment`: Alignment of message bubbles.
+  /// - `indicatorOnScrollStatus`: Status of the scroll indicator.
+  /// - `isNextPageLoading`: Indicates if the next page is currently loading.
+  /// - `animation`: Controls animations within the chat list.
+  /// - `items`: The list of items to display in the chat.
+  /// - `itemBuilder`: A builder function for creating item widgets.
+  /// - `onEndReachedThreshold`: Threshold for triggering the loading of the next page.
+  /// - `onEndReached`: Callback function called when the end of the list is reached.
+  /// - `useTopSafeAreaInset`: Whether to adjust for the top safe area inset.
+  /// - `listKey`: Key for the list widget.
+  ///
+  /// Returns a widget that represents the customized structure of the chat list.
+  final Widget Function(
+    ScrollController scrollController,
+    ScrollViewKeyboardDismissBehavior keyboardDismissBehavior,
+    ScrollPhysics? scrollPhysics,
+    bool reverse,
+    Widget? bottomWidget,
+    TypingIndicatorOptions? typingIndicatorOptions,
+    BubbleRtlAlignment bubbleRtlAlignment,
+    bool indicatorOnScrollStatus,
+    bool isNextPageLoading,
+    Animation<double> animation,
+    List<Object> items,
+    Widget Function(int index, Animation<double> animation) itemBuilder,
+    double? onEndReachedThreshold,
+    Future<void> Function()? onEndReached,
+    bool useTopSafeAreaInset,
+    Key? listKey,
+  )? customStructureBuilder;
 
   @override
   State<Chat> createState() => ChatState();
@@ -662,6 +708,8 @@ class ChatState extends State<Chat> {
                                         widget.typingIndicatorOptions,
                                     useTopSafeAreaInset:
                                         widget.useTopSafeAreaInset ?? isMobile,
+                                    customStructureBuilder:
+                                        widget.customStructureBuilder,
                                   ),
                                 ),
                               ),

@@ -24,6 +24,7 @@ class ChatList extends StatefulWidget {
     this.scrollPhysics,
     this.typingIndicatorOptions,
     required this.useTopSafeAreaInset,
+    this.customStructureBuilder,
   });
 
   /// A custom widget at the bottom of the list.
@@ -67,6 +68,52 @@ class ChatList extends StatefulWidget {
 
   /// Whether to use top safe area inset for the list.
   final bool useTopSafeAreaInset;
+
+  /// Defines a customizable structure builder for a chat list widget.
+  ///
+  /// This function type is used to create a custom structure for the chat list,
+  /// allowing for extensive customization of its appearance and behavior. It
+  /// takes several parameters that control various aspects of the chat list,
+  /// including scrolling behavior, typing indicators, and message display.
+  ///
+  /// Parameters:
+  /// - `scrollController`: Controls the scroll behavior of the chat list.
+  /// - `keyboardDismissBehavior`: Determines how the keyboard dismissal is handled.
+  /// - `scrollPhysics`: Defines the physics of the scrolling content.
+  /// - `reverse`: Whether the list should be displayed in reverse order.
+  /// - `bottomWidget`: A widget to display at the bottom of the list.
+  /// - `typingIndicatorOptions`: Configuration for the typing indicator.
+  /// - `bubbleRtlAlignment`: Alignment of message bubbles.
+  /// - `indicatorOnScrollStatus`: Status of the scroll indicator.
+  /// - `isNextPageLoading`: Indicates if the next page is currently loading.
+  /// - `animation`: Controls animations within the chat list.
+  /// - `items`: The list of items to display in the chat.
+  /// - `itemBuilder`: A builder function for creating item widgets.
+  /// - `onEndReachedThreshold`: Threshold for triggering the loading of the next page.
+  /// - `onEndReached`: Callback function called when the end of the list is reached.
+  /// - `useTopSafeAreaInset`: Whether to adjust for the top safe area inset.
+  /// - `listKey`: Key for the list widget.
+  ///
+  /// Returns a widget that represents the customized structure of the chat list.
+  final Widget Function(
+    ScrollController scrollController,
+    ScrollViewKeyboardDismissBehavior keyboardDismissBehavior,
+    ScrollPhysics? scrollPhysics,
+    bool reverse,
+    Widget? bottomWidget,
+    TypingIndicatorOptions? typingIndicatorOptions,
+    BubbleRtlAlignment bubbleRtlAlignment,
+    bool indicatorOnScrollStatus,
+    bool isNextPageLoading,
+    Animation<double> animation,
+    List<Object> items,
+    Widget Function(int index, Animation<double> animation) itemBuilder,
+    double? onEndReachedThreshold,
+    Future<void> Function()? onEndReached,
+    bool useTopSafeAreaInset,
+    Key? listKey,
+   // nt? Function(Key)?  findChildIndexCallback,
+  )? customStructureBuilder;
 
   @override
   State<ChatList> createState() => _ChatListState();
@@ -260,98 +307,119 @@ class _ChatListState extends State<ChatList>
 
           return false;
         },
-        child: CustomScrollView(
-          controller: widget.scrollController,
-          keyboardDismissBehavior: widget.keyboardDismissBehavior,
-          physics: widget.scrollPhysics,
-          reverse: true,
-          slivers: [
-            if (widget.bottomWidget != null)
-              SliverToBoxAdapter(child: widget.bottomWidget),
-            SliverPadding(
-              padding: const EdgeInsets.only(bottom: 4),
-              sliver: SliverToBoxAdapter(
-                child: (widget.typingIndicatorOptions!.typingUsers.isNotEmpty &&
-                        !_indicatorOnScrollStatus)
-                    ? (widget.typingIndicatorOptions
-                                ?.customTypingIndicatorBuilder !=
-                            null
-                        ? widget.typingIndicatorOptions!
-                            .customTypingIndicatorBuilder!(
-                            context: context,
-                            bubbleAlignment: widget.bubbleRtlAlignment,
-                            options: widget.typingIndicatorOptions!,
-                            indicatorOnScrollStatus: _indicatorOnScrollStatus,
-                          )
-                        : widget.typingIndicatorOptions
-                                ?.customTypingIndicator ??
-                            TypingIndicator(
-                              bubbleAlignment: widget.bubbleRtlAlignment,
-                              options: widget.typingIndicatorOptions!,
-                              showIndicator: (widget.typingIndicatorOptions!
-                                      .typingUsers.isNotEmpty &&
-                                  !_indicatorOnScrollStatus),
-                            ))
-                    : const SizedBox.shrink(),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.only(bottom: 4),
-              sliver: SliverAnimatedList(
-                findChildIndexCallback: (Key key) {
-                  if (key is ValueKey<Object>) {
-                    final newIndex = widget.items.indexWhere(
-                      (v) => _valueKeyForItem(v) == key,
-                    );
-                    if (newIndex != -1) {
-                      return newIndex;
-                    }
-                  }
-                  return null;
-                },
-                initialItemCount: widget.items.length,
-                key: _listKey,
-                itemBuilder: (_, index, animation) =>
-                    _newMessageBuilder(index, animation),
-              ),
-            ),
-            SliverPadding(
-              padding: EdgeInsets.only(
-                top: 16 +
-                    (widget.useTopSafeAreaInset
-                        ? MediaQuery.of(context).padding.top
-                        : 0),
-              ),
-              sliver: SliverToBoxAdapter(
-                child: SizeTransition(
-                  axisAlignment: 1,
-                  sizeFactor: _animation,
-                  child: Center(
-                    child: Container(
-                      alignment: Alignment.center,
-                      height: 32,
-                      width: 32,
-                      child: SizedBox(
-                        height: 16,
-                        width: 16,
-                        child: _isNextPageLoading
-                            ? CircularProgressIndicator(
-                                backgroundColor: Colors.transparent,
-                                strokeWidth: 1.5,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  InheritedChatTheme.of(context)
-                                      .theme
-                                      .primaryColor,
-                                ),
+        child: widget.customStructureBuilder?.call(
+              widget.scrollController,
+              widget.keyboardDismissBehavior,
+              widget.scrollPhysics,
+              false,
+              widget.bottomWidget,
+              widget.typingIndicatorOptions,
+              widget.bubbleRtlAlignment,
+              _indicatorOnScrollStatus,
+              _isNextPageLoading,
+              _animation,
+              widget.items,
+              // widget.itemBuilder,
+              _newMessageBuilder,
+              widget.onEndReachedThreshold,
+              widget.onEndReached,
+              widget.useTopSafeAreaInset,
+              _listKey,
+            ) ??
+            CustomScrollView(
+              controller: widget.scrollController,
+              keyboardDismissBehavior: widget.keyboardDismissBehavior,
+              physics: widget.scrollPhysics,
+              reverse: true,
+              slivers: [
+                if (widget.bottomWidget != null)
+                  SliverToBoxAdapter(child: widget.bottomWidget),
+                SliverPadding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  sliver: SliverToBoxAdapter(
+                    child: (widget.typingIndicatorOptions!.typingUsers
+                                .isNotEmpty &&
+                            !_indicatorOnScrollStatus)
+                        ? (widget.typingIndicatorOptions
+                                    ?.customTypingIndicatorBuilder !=
+                                null
+                            ? widget.typingIndicatorOptions!
+                                .customTypingIndicatorBuilder!(
+                                context: context,
+                                bubbleAlignment: widget.bubbleRtlAlignment,
+                                options: widget.typingIndicatorOptions!,
+                                indicatorOnScrollStatus:
+                                    _indicatorOnScrollStatus,
                               )
-                            : null,
+                            : widget.typingIndicatorOptions
+                                    ?.customTypingIndicator ??
+                                TypingIndicator(
+                                  bubbleAlignment: widget.bubbleRtlAlignment,
+                                  options: widget.typingIndicatorOptions!,
+                                  showIndicator: (widget.typingIndicatorOptions!
+                                          .typingUsers.isNotEmpty &&
+                                      !_indicatorOnScrollStatus),
+                                ))
+                        : const SizedBox.shrink(),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  sliver: SliverAnimatedList(
+                    findChildIndexCallback: (Key key) {
+                      if (key is ValueKey<Object>) {
+                        final newIndex = widget.items.indexWhere(
+                          (v) => _valueKeyForItem(v) == key,
+                        );
+                        if (newIndex != -1) {
+                          return newIndex;
+                        }
+                      }
+                      return null;
+                    },
+                    initialItemCount: widget.items.length,
+                    key: _listKey,
+                    itemBuilder: (_, index, animation) =>
+                        _newMessageBuilder(index, animation),
+                  ),
+                ),
+                SliverPadding(
+                  padding: EdgeInsets.only(
+                    top: 16 +
+                        (widget.useTopSafeAreaInset
+                            ? MediaQuery.of(context).padding.top
+                            : 0),
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: SizeTransition(
+                      axisAlignment: 1,
+                      sizeFactor: _animation,
+                      child: Center(
+                        child: Container(
+                          alignment: Alignment.center,
+                          height: 32,
+                          width: 32,
+                          child: SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: _isNextPageLoading
+                                ? CircularProgressIndicator(
+                                    backgroundColor: Colors.transparent,
+                                    strokeWidth: 1.5,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      InheritedChatTheme.of(context)
+                                          .theme
+                                          .primaryColor,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
       );
 }
