@@ -330,6 +330,7 @@ class _ChatListState extends State<ChatList>
               controller: widget.scrollController,
               keyboardDismissBehavior: widget.keyboardDismissBehavior,
               physics: widget.scrollPhysics,
+              cacheExtent: 10000,
               reverse: true,
               slivers: [
                 if (widget.bottomWidget != null)
