@@ -103,6 +103,7 @@ class Chat extends StatefulWidget {
     this.slidableMessageBuilder,
     this.isLeftStatus = false,
     this.messageWidthRatio = 0.72,
+    this.separatorBuilder,
     this.customStructureBuilder,
   });
 
@@ -338,6 +339,10 @@ class Chat extends StatefulWidget {
   /// Width ratio for message bubble.
   final double messageWidthRatio;
 
+  /// A builder function for creating separators between items.
+  final Widget Function(types.Message message, int messageIndex)?
+      separatorBuilder;
+
   /// Defines a customizable structure builder for a chat list widget.
   ///
   /// This function type is used to create a custom structure for the chat list,
@@ -546,6 +551,10 @@ class ChatState extends State<Chat> {
           onMessageLongPress: widget.onMessageLongPress,
           onMessageStatusLongPress: widget.onMessageStatusLongPress,
           onMessageStatusTap: widget.onMessageStatusTap,
+          seperator: widget.separatorBuilder?.call(
+            message,
+            widget.messages.indexOf(message),
+          ),
           onMessageTap: (context, tappedMessage) {
             if (tappedMessage is types.ImageMessage &&
                 widget.disableImageGallery != true) {
